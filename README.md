@@ -5,15 +5,15 @@ Syntax
 ------
 
 ```
-usage: ivtool [-token <token>] [-ptc -user <user> -pass <pass>] [-r] [-f] [-sleep <x>]
- -f,--force forces the rename for pokemon that already have a nickname
- -h,--help  print this message
---pass <arg>your ptc password
---ptc   use ptc for login instead of google
- -r,--renamerename every pokemon without a nickname
---sleep <arg>   the time the tool waits after each renaming (default = 1000ms)
---token <arg>   your google token if you have one (not needed)
---user <arg>your ptc username
+ivtool [-token <token>] [-ptc -user <user> -pass <pass>] [-r] [-f] [-sleep <x>]
+ -f,	--force 		forces the rename for pokemon that already have a nickname
+ -h,	--help  		print this message
+		--pass <arg>	your ptc password
+		--ptc   		use ptc for login instead of google
+ -r,	--rename		rename every pokemon without a nickname
+		--sleep <arg>   the time the tool waits after each renaming (default = 1000ms)
+		--token <arg>   your google token if you have one (not needed)
+		--user <arg>	your ptc username
 ```
 
 Examples
