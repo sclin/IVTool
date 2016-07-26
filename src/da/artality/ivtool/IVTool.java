@@ -85,7 +85,7 @@ public class IVTool {
 
 	private void help() {
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("ivtool [-token <token>] [-ptc -user <user> -pass <pass>] [-l|-list] [-r|-rename]", options);
+		formatter.printHelp("ivtool [-token <token>] [-ptc -user <user> -pass <pass>] [-r|-rename]", options);
 		System.exit(0);
 	}
 
@@ -98,7 +98,9 @@ public class IVTool {
 		int def = poke.getIndividualDefense();
 		int sta = poke.getIndividualStamina();
 
-		return Math.round((atk + def + sta) / 45.0 * 100) + "% " + atk + " " + def + " " + sta;
+		int perc = (int) Math.round((atk + def + sta) / 45.0 * 100);
+
+		return perc + "% " + ((perc == 100) ? "" : (atk + " " + def + " " + sta));
 	}
 
 	public static final void main(String[] args) {
