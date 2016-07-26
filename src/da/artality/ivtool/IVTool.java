@@ -55,6 +55,8 @@ public class IVTool {
 				if (!cmd.hasOption("user") || !cmd.hasOption("pass")) {
 					help();
 				}
+				user = cmd.getOptionValue("user");
+				pass = cmd.getOptionValue("pass");
 			}
 
 			int sleepTime = 1000;

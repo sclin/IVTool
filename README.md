@@ -49,7 +49,7 @@ Changelog
 0.0.2
 
 * sort output
-* wait after each renaming (-sleep=<time in ms>)
+* wait after each renaming (-sleep <time in ms>)
 * option to force the renaming (-f | -force)
 
 0.0.1
