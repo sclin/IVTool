@@ -24,29 +24,19 @@ Examples
 ```
 java -jar ivtool.jar -user=admin -pass=1234
 ```
-<<<<<<< HEAD
-2) You want to use your ptc account (-ptc)
-=======
 2) You want to rename all your pokemon and use a google account: 
 ```
 java -jar ivtool.jar -r -f
-```
-3) You want to rename all your pokemon and use a ptc account:
->>>>>>> e1e46df15f60c83e57cae650e986e4f4e8cc992d
-```
-java -jar ivtool.jar -ptc -user=admin -pass=1234
 ```
 3) You want to rename (-r) all your pokemon and export the list as output.csv (-out=output.csv)
 ```
 java -jar ivtool.jar -ptc -user=admin -pass=1234 -r -out=output.csv
 ```
 
-
 Example output.csv
 --------------
 
-
-
+![output.csv](https://raw.githubusercontent.com/Tsunamii/IVTool/master/example_output.jpg)
 
 Changelog
 ---------
