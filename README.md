@@ -1,5 +1,10 @@
-IV Tool (0.1.0)
-===============
+IV Tool
+=======
+
+Download
+--------
+
+https://github.com/Tsunamii/IVTool/releases
 
 Syntax
 ------
@@ -40,6 +45,11 @@ Example output.csv
 
 Changelog
 ---------
+
+0.1.1
+
+* fixed atk, def, sta calculation
+* changed damage per cp to use current cp instead of max cp
 
 0.1.0
 

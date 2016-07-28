@@ -54,19 +54,19 @@ public class PokeInfo {
 		return pokemon.getIndividualStamina();
 	}
 
-	public int getAtk() {
-		return pokemon.getMeta()
-				.getBaseAttack() + getIvAtk();
+	public double getAtk() {
+		return (pokemon.getMeta()
+				.getBaseAttack() + getIvAtk()) * pokemon.getCpMultiplier();
 	}
 
-	public int getDef() {
-		return pokemon.getMeta()
-				.getBaseDefense() + getIvDef();
+	public double getDef() {
+		return (pokemon.getMeta()
+				.getBaseDefense() + getIvDef()) * pokemon.getCpMultiplier();
 	}
 
-	public int getSta() {
-		return pokemon.getMeta()
-				.getBaseStamina() + getIvSta();
+	public double getSta() {
+		return (pokemon.getMeta()
+				.getBaseStamina() + getIvSta()) * pokemon.getCpMultiplier();
 	}
 
 	public int getCp() {
@@ -115,12 +115,22 @@ public class PokeInfo {
 		return Math.max(getDpsNormal(), getDpsCombined());
 	}
 
+	/**
+	 * Multiplies the maximum dps of the pokemon with it's current atk value to see how much damage potential the pokemon currently has
+	 * 
+	 * @return maximum dps * atk
+	 */
 	public double getDmg() {
 		return getDpsMax() * getAtk();
 	}
 
+	/**
+	 * Calculates the potential damage per cp. Useful for finding pokemon for efficiently farming exp at gyms
+	 * 
+	 * @return (maximum dps * atk) / cp
+	 */
 	public double getDmgPerCp() {
-		return (getMaxCp() == 0) ? 0 : (getDmg() / getMaxCp());
+		return getDmg() / getCp();
 	}
 
 	/**
@@ -141,9 +151,9 @@ public class PokeInfo {
 	public String toString() {
 		DecimalFormat f = new DecimalFormat("0.00");
 
-		return getNr() + ";" + getPokemonId() + ";" + getIvPerc() + ";" + getIvAtk() + ";" + getIvDef() + ";" + getIvSta() + ";" + getAtk() + ";"
-				+ getDef() + ";" + getSta() + ";" + getCp() + ";" + f.format(getMaxCp()) + ";" + f.format(getDpsNormal()) + ";"
-				+ f.format(getDpsSpecial()) + ";" + f.format(getDpsCombined()) + ";" + f.format(getDpsMax()) + ";" + f.format(getDmg()) + ";"
+		return getNr() + ";" + getPokemonId() + ";" + getIvPerc() + ";" + getIvAtk() + ";" + getIvDef() + ";" + getIvSta() + ";" + f.format(getAtk())
+				+ ";" + f.format(getDef()) + ";" + f.format(getSta()) + ";" + getCp() + ";" + f.format(getMaxCp()) + ";" + f.format(getDpsNormal())
+				+ ";" + f.format(getDpsSpecial()) + ";" + f.format(getDpsCombined()) + ";" + f.format(getDpsMax()) + ";" + f.format(getDmg()) + ";"
 				+ f.format(getDmgPerCp());
 	}
 
