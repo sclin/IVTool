@@ -24,9 +24,9 @@ Examples
 ```
 java -jar ivtool.jar -user=admin -pass=1234
 ```
-2) You want to rename all your pokemon and use a google account: 
+2) You want to use your ptc instead (-ptc): 
 ```
-java -jar ivtool.jar -r -f
+java -jar ivtool.jar -ptc -user=admin -pass=1234
 ```
 3) You want to rename (-r) all your pokemon and export the list as output.csv (-out=output.csv)
 ```
