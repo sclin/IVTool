@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Scanner;
 
 import okhttp3.OkHttpClient;
 
@@ -11,18 +12,17 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.pokegoapi.api.PokemonGo;
 import com.pokegoapi.auth.CredentialProvider;
-import com.pokegoapi.auth.GoogleAutoCredentialProvider;
+import com.pokegoapi.auth.GoogleUserCredentialProvider;
 import com.pokegoapi.auth.PtcCredentialProvider;
 import com.pokegoapi.exceptions.LoginFailedException;
 import com.pokegoapi.exceptions.RemoteServerException;
 import com.pokegoapi.util.Log;
-import com.pokegoapi.util.SystemTimeImpl;
-import com.pokegoapi.util.Time;
 
 public class IVTool {
 
@@ -39,14 +39,26 @@ public class IVTool {
 		options.addOption(null, "pass", true, "your ptc/google password");
 		options.addOption(null, "sleep", true, "sleep time after each action in ms (default = 2000ms)");
 		options.addOption("o", "out", true, "create an output file");
+		options.addOption(null, "reset", false, "resets all(!) nicknames");
+		options.addOption(null, "token", true, "your google token if you already have one");
 	}
 
 	public void parse(String[] args) {
 		try {
+			System.out.println("Start CLI parsing.");
+
 			CommandLineParser parser = new DefaultParser();
 			CommandLine cmd = parser.parse(options, args);
 
 			Log.setLevel(cmd.hasOption("d") ? Log.Level.VERBOSE : Log.Level.ASSERT);
+
+			// CLI info dump
+			for (Option o : cmd.getOptions()) {
+				Log.d("Option [" + o.getOpt() + "|" + o.getLongOpt() + "]", o.getValue());
+			}
+			for (String s : cmd.getArgs()) {
+				Log.d("Arg", s);
+			}
 
 			if (cmd.hasOption("h")) {
 				help();
@@ -54,6 +66,7 @@ public class IVTool {
 
 			boolean rename = cmd.hasOption("r");
 			boolean forceRename = cmd.hasOption("f");
+			boolean resetNickname = cmd.hasOption("reset");
 
 			boolean createFile = cmd.hasOption("out");
 			String filePath = cmd.getOptionValue("out");
@@ -61,25 +74,43 @@ public class IVTool {
 			int sleepTime = Utils.parseInt(cmd.getOptionValue("sleep"), 2000);
 
 			boolean star = cmd.hasOption("s");
-			int starThreshold = star ? Integer.parseInt(cmd.getOptionValue("s")) : 85;
+			int starThreshold = Utils.parseInt(cmd.getOptionValue("s"), 85);
+
+			System.out.println("Logging in.");
 
 			OkHttpClient client = new OkHttpClient();
-			Time time = new SystemTimeImpl();
-			CredentialProvider cred;
-
-			if (!cmd.hasOption("user") || !cmd.hasOption("pass")) {
-				help();
-			}
-			String user = cmd.getOptionValue("user");
-			String pass = cmd.getOptionValue("pass");
+			PokemonGo go;
 
 			if (cmd.hasOption("ptc")) {
-				cred = new PtcCredentialProvider(client, user, pass, time);
+				if (!cmd.hasOption("user") || !cmd.hasOption("pass")) {
+					help();
+				}
+
+				String user = cmd.getOptionValue("user");
+				String pass = cmd.getOptionValue("pass");
+				CredentialProvider cred = new PtcCredentialProvider(client, user, pass);
+				go = new PokemonGo(cred, client);
+
 			} else {
-				cred = new GoogleAutoCredentialProvider(client, user, pass, time);
+
+				GoogleUserCredentialProvider cred;
+				if (cmd.hasOption("token")) {
+					cred = new GoogleUserCredentialProvider(client, cmd.getOptionValue("token"));
+				} else {
+					cred = new GoogleUserCredentialProvider(client);
+					System.out.println("Visit this url: " + GoogleUserCredentialProvider.LOGIN_URL);
+					System.out.println("Enter authorisation code:");
+					Scanner sc = new Scanner(System.in);
+					String access = sc.nextLine();
+					sc.close();
+					cred.login(access);
+					System.out.println("Refresh token:" + cred.getRefreshToken());
+				}
+				go = new PokemonGo(cred, client);
+
 			}
 
-			PokemonGo go = new PokemonGo(cred, client, time);
+			System.out.println("Getting pokemon information.");
 
 			PokeInfo[] pokeInfos = go.getInventories()
 					.getPokebank()
@@ -97,6 +128,11 @@ public class IVTool {
 					rename(p);
 					System.out.println("Successfully renamed.");
 					Thread.sleep(sleepTime);
+				} else if (resetNickname) {
+					p.getPokemon()
+							.renamePokemon("");
+					System.out.println("Nickname resetted.");
+					Thread.sleep(sleepTime);
 				}
 
 				if (star && (p.getIvPerc() > starThreshold)) {
@@ -108,6 +144,7 @@ public class IVTool {
 			}
 
 			if (createFile) {
+				System.out.println("Creating output file.");
 				createFile(filePath, pokeInfos);
 			}
 
@@ -128,7 +165,7 @@ public class IVTool {
 
 	private void help() {
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("ivtool [-ptc] -user <user> -pass <1234> [-r] [-f] [-out <file>]", options);
+		formatter.printHelp("ivtool -token <token> [-ptc -user <user> -pass <1234>] [-r] [-f] [-out <file>]", options);
 		System.exit(0);
 	}
 
