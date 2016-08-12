@@ -1,15 +1,13 @@
 package da.artality.ivtool;
 
-import java.text.DecimalFormat;
-
-import POGOProtos.Enums.PokemonIdOuterClass.PokemonId;
+import org.apache.commons.lang3.text.WordUtils;
 
 import com.pokegoapi.api.pokemon.Pokemon;
 import com.pokegoapi.api.pokemon.PokemonMeta;
 import com.pokegoapi.api.pokemon.PokemonMoveMeta;
 import com.pokegoapi.api.pokemon.PokemonMoveMetaRegistry;
 import com.pokegoapi.api.pokemon.PokemonType;
-import com.pokegoapi.exceptions.NoSuchItemException;
+import com.sun.xml.internal.ws.util.StringUtils;
 
 /**
  * Wrapper Class for easier access to all the needed infos of the pokemon
@@ -24,18 +22,29 @@ public class PokeInfo {
 	public PokeInfo(Pokemon pokemon) {
 		this.pokemon = pokemon;
 	}
-
+	
 	public Pokemon getPokemon() {
 		return pokemon;
 	}
 
-	public int getNr() {
-		return pokemon.getPokemonId()
-				.getNumber();
+	public long getId() {
+		return pokemon.getId();
 	}
 
-	public PokemonId getPokemonId() {
-		return pokemon.getPokemonId();
+	public int getNr() {
+		return pokemon.getPokemonId().getNumber();
+	}
+
+	public String getName() {
+		return beautifyName(pokemon.getPokemonId().toString());
+	}
+
+	public String getType1() {
+		return beautifyType(pokemon.getMeta().getType1().toString());
+	}
+
+	public String getType2() {
+		return beautifyType(pokemon.getMeta().getType2().toString());
 	}
 
 	public int getIvPerc() {
@@ -55,54 +64,64 @@ public class PokeInfo {
 	}
 
 	public double getAtk() {
-		return (pokemon.getMeta()
-				.getBaseAttack() + getIvAtk()) * pokemon.getCpMultiplier();
+		return (pokemon.getMeta().getBaseAttack() + getIvAtk()) * pokemon.getCpMultiplier();
 	}
 
 	public double getDef() {
-		return (pokemon.getMeta()
-				.getBaseDefense() + getIvDef()) * pokemon.getCpMultiplier();
+		return (pokemon.getMeta().getBaseDefense() + getIvDef()) * pokemon.getCpMultiplier();
 	}
 
 	public double getSta() {
-		return (pokemon.getMeta()
-				.getBaseStamina() + getIvSta()) * pokemon.getCpMultiplier();
+		return (pokemon.getMeta().getBaseStamina() + getIvSta()) * pokemon.getCpMultiplier();
 	}
 
 	public int getCp() {
 		return pokemon.getCp();
 	}
 
-	public int getMaxCp() {
-		try {
-			return pokemon.getMaxCp();
-		} catch (NoSuchItemException e) {
-			return 0;
-		}
+	public String getMoveFast() {
+		PokemonMoveMeta moveMeta = PokemonMoveMetaRegistry.getMeta(pokemon.getMove1());
+		return beautifyMove(moveMeta.getMove().toString());
 	}
 
-	public double getDpsNormal() {
+	public String getMoveFastType() {
+		PokemonMoveMeta moveMeta = PokemonMoveMetaRegistry.getMeta(pokemon.getMove1());
+		return beautifyType(moveMeta.getType().toString());
+	}
+
+	public double getMoveFastDps() {
 		PokemonMoveMeta moveMeta = PokemonMoveMetaRegistry.getMeta(pokemon.getMove1());
 		return moveMeta.getPower() / (double) moveMeta.getTime() * 1000 * getAttackModifier(moveMeta.getType());
 	}
 
-	public double getDpsSpecial() {
+	public String getMoveCharge() {
+		PokemonMoveMeta moveMeta = PokemonMoveMetaRegistry.getMeta(pokemon.getMove2());
+		return beautifyMove(moveMeta.getMove().toString());
+	}
+
+	public String getMoveChargeType() {
+		PokemonMoveMeta moveMeta = PokemonMoveMetaRegistry.getMeta(pokemon.getMove2());
+		return beautifyType(moveMeta.getType().toString());
+	}
+
+	public double getMoveChargeDps() {
 		PokemonMoveMeta moveMeta = PokemonMoveMetaRegistry.getMeta(pokemon.getMove2());
 		return moveMeta.getPower() / (double) moveMeta.getTime() * 1000 * getAttackModifier(moveMeta.getType());
 	}
 
 	/**
-	 * Calculates the theoretically combined dps of the normal and special attack of the pokemon if used perfectly
+	 * Calculates the combined dps of the normal and special attack of the
+	 * pokemon if used perfectly
 	 * 
 	 * @return combined dps
 	 */
 	public double getDpsCombined() {
 		PokemonMoveMeta move1Meta = PokemonMoveMetaRegistry.getMeta(pokemon.getMove1());
 		PokemonMoveMeta move2Meta = PokemonMoveMetaRegistry.getMeta(pokemon.getMove2());
-		double atkCount = Math.abs(move2Meta.getEnergy() / (double) move1Meta.getEnergy());
+		double atkCount = Math.ceil(move2Meta.getEnergy() / (double) move1Meta.getEnergy());
 
-		return ((atkCount * move1Meta.getPower() * getAttackModifier(move1Meta.getType()) + move2Meta.getPower()
-				* getAttackModifier(move2Meta.getType()))
+		return ((atkCount * move1Meta.getPower() * getAttackModifier(move1Meta.getType())
+				+ move2Meta.getPower() * getAttackModifier(move2Meta.getType()))
 				/ (atkCount * move1Meta.getTime() + move2Meta.getTime()) * 1000);
 	}
 
@@ -112,11 +131,12 @@ public class PokeInfo {
 	 * @return maximum dps
 	 */
 	public double getDpsMax() {
-		return Math.max(getDpsNormal(), getDpsCombined());
+		return Math.max(getMoveFastDps(), getDpsCombined());
 	}
 
 	/**
-	 * Multiplies the maximum dps of the pokemon with it's current atk value to see how much damage potential the pokemon currently has
+	 * Multiplies the maximum dps of the pokemon with it's current atk value to
+	 * see how much damage potential the pokemon currently has
 	 * 
 	 * @return maximum dps * atk
 	 */
@@ -125,7 +145,8 @@ public class PokeInfo {
 	}
 
 	/**
-	 * Calculates the potential damage per cp. Useful for finding pokemon for efficiently farming exp at gyms
+	 * Calculates the potential damage per cp. Useful for finding pokemon for
+	 * efficiently farming exp at gyms
 	 * 
 	 * @return (maximum dps * atk) / cp
 	 */
@@ -139,7 +160,7 @@ public class PokeInfo {
 	 * @return <b>1.25</b> if move and pokemon have the same type<br/>
 	 *         <b>1.00</b> otherwise
 	 */
-	public double getAttackModifier(PokemonType type) {
+	private double getAttackModifier(PokemonType type) {
 		PokemonMeta meta = pokemon.getMeta();
 		if (meta.getType1() == type || meta.getType2() == type) {
 			return 1.25;
@@ -147,14 +168,17 @@ public class PokeInfo {
 		return 1;
 	}
 
-	@Override
-	public String toString() {
-		DecimalFormat f = new DecimalFormat("0.00");
+	private String beautifyName(String name) {
+		return StringUtils.capitalize(name.toLowerCase().replace("_male", "♂").replace("_female", "♀"));
+	}
 
-		return getNr() + ";" + getPokemonId() + ";" + getIvPerc() + ";" + getIvAtk() + ";" + getIvDef() + ";" + getIvSta() + ";" + f.format(getAtk())
-				+ ";" + f.format(getDef()) + ";" + f.format(getSta()) + ";" + getCp() + ";" + f.format(getMaxCp()) + ";" + f.format(getDpsNormal())
-				+ ";" + f.format(getDpsSpecial()) + ";" + f.format(getDpsCombined()) + ";" + f.format(getDpsMax()) + ";" + f.format(getDmg()) + ";"
-				+ f.format(getDmgPerCp());
+	private String beautifyType(String type) {
+		return StringUtils.capitalize(type.toLowerCase());
+	}
+
+	private String beautifyMove(String move) {
+		return WordUtils
+				.capitalize(move.toLowerCase().replace("_fast", "").replace("_blastoise", "").replace('_', ' '));
 	}
 
 }

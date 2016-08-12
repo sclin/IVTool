@@ -6,8 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
-import okhttp3.OkHttpClient;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -24,6 +22,8 @@ import com.pokegoapi.exceptions.LoginFailedException;
 import com.pokegoapi.exceptions.RemoteServerException;
 import com.pokegoapi.util.Log;
 
+import okhttp3.OkHttpClient;
+
 public class IVTool {
 
 	private Options options = new Options();
@@ -37,7 +37,6 @@ public class IVTool {
 		options.addOption(null, "ptc", false, "use your ptc account for login instead of google");
 		options.addOption(null, "user", true, "your ptc username / google email");
 		options.addOption(null, "pass", true, "your ptc/google password");
-		options.addOption(null, "sleep", true, "sleep time after each action in ms (default = 2000ms)");
 		options.addOption("o", "out", true, "create an output file");
 		options.addOption(null, "reset", false, "resets all(!) nicknames");
 		options.addOption(null, "token", true, "your google token if you already have one");
@@ -70,8 +69,6 @@ public class IVTool {
 
 			boolean createFile = cmd.hasOption("out");
 			String filePath = cmd.getOptionValue("out");
-
-			int sleepTime = Utils.parseInt(cmd.getOptionValue("sleep"), 2000);
 
 			boolean star = cmd.hasOption("s");
 			int starThreshold = Utils.parseInt(cmd.getOptionValue("s"), 85);
@@ -119,27 +116,28 @@ public class IVTool {
 					.map(p -> new PokeInfo(p))
 					.sorted(new PokeInfoComparator())
 					.toArray(PokeInfo[]::new);
+			
+			PokeUtils utils = new PokeUtils(go);
+			utils.batchRename(pokeInfos, "");
 
+			/*
 			for (PokeInfo p : pokeInfos) {
 				System.out.println(p.toString());
 
-				if (rename && ("".equals(p.getPokemon()
-						.getNickname()) || forceRename)) {
+				if (rename && ("".equals(p.getPokemon().getNickname()) || forceRename)) {
 					rename(p);
 					System.out.println("Successfully renamed.");
-					Thread.sleep(sleepTime);
+					Thread.sleep(getSleepTime());
 				} else if (resetNickname) {
-					p.getPokemon()
-							.renamePokemon("");
+					p.getPokemon().renamePokemon("");
 					System.out.println("Nickname resetted.");
-					Thread.sleep(sleepTime);
+					Thread.sleep(getSleepTime());
 				}
 
 				if (star && (p.getIvPerc() > starThreshold)) {
-					p.getPokemon()
-							.setFavoritePokemon(true);
+					p.getPokemon().setFavoritePokemon(true);
 					System.out.println("Successfully starred.");
-					Thread.sleep(sleepTime);
+					Thread.sleep(getSleepTime());
 				}
 			}
 
@@ -147,7 +145,7 @@ public class IVTool {
 				System.out.println("Creating output file.");
 				createFile(filePath, pokeInfos);
 			}
-
+			*/
 			System.out.println("Finished.");
 
 		} catch (ParseException e) {
@@ -156,11 +154,11 @@ public class IVTool {
 		} catch (LoginFailedException | RemoteServerException e) {
 			System.out.println("Connection failed. Reason: " + e.getMessage());
 			System.out.println("Check http://ispokemongodownornot.com/ to see if servers are down.");
-		} catch (InterruptedException e) {
+		}/* catch (InterruptedException e) {
 			System.out.println("Sleep failed. Reason: " + e.getMessage());
 		} catch (IOException e) {
 			System.out.println("CSV creation failed. Reason: " + e.getMessage());
-		}
+		}*/
 	}
 
 	private void help() {
@@ -168,29 +166,7 @@ public class IVTool {
 		formatter.printHelp("ivtool -token <token> [-ptc -user <user> -pass <1234>] [-r] [-f] [-out <file>]", options);
 		System.exit(0);
 	}
-
-	private void rename(PokeInfo poke) throws LoginFailedException, RemoteServerException {
-		int atk = poke.getIvAtk();
-		int def = poke.getIvDef();
-		int sta = poke.getIvSta();
-		int perc = poke.getIvPerc();
-
-		poke.getPokemon()
-				.renamePokemon(perc + "% " + ((perc == 100) ? "" : (atk + " " + def + " " + sta)));
-	}
-
-	private void createFile(String filePath, PokeInfo[] pokes) throws IOException {
-		String header = "Nr;Pokemon;IV %;IV Atk;IV Def;IV Sta;Atk;Def;Sta;CP;Max CP;DPS Normal;DPS Special;DPS combined;DPS max;Damage;Damage per CP";
-
-		BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath));
-		writer.write(header);
-		for (PokeInfo poke : pokes) {
-			writer.newLine();
-			writer.write(poke.toString());
-		}
-		writer.close();
-	}
-
+	
 	public static final void main(String[] args) {
 		new IVTool().parse(args);
 		System.exit(0);
